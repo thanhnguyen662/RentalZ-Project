@@ -1,0 +1,12 @@
+{
+    "components": {
+      "Input": {
+        "appearances": {
+          "border-radius": 10
+        }
+      }
+    },
+    "strict": {
+        "border-radius": 10
+    }
+}
