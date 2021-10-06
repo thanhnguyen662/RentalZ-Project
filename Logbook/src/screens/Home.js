@@ -3,9 +3,12 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 import CategoryCard from '../components/CategoryCard';
+import ModalCard from '../components/ModalCard';
 
 const Home = ({ navigation }) => {
    const [data, setData] = useState([]);
+   const [isModalVisible, setIsModalVisible] = useState(false);
+   const [selectedId, setSelectedId] = useState('');
 
    useEffect(() => {
       const unsubscribe = navigation.addListener('focus', () => {
@@ -24,11 +27,15 @@ const Home = ({ navigation }) => {
       return () => unsubscribe;
    }, []);
 
-   const handleClickDelete = async (rentalId) => {
+   const handleModalVisible = () => {
+      setIsModalVisible(false);
+   };
+
+   const handleOnOk = async () => {
       try {
          const response = await axios.post(
             'http://192.168.0.113:8000/rental/delete',
-            { rentalId: rentalId },
+            { rentalId: selectedId },
          );
          setData((prev) => {
             return prev.filter((d) => d.id !== response.data.id);
@@ -51,13 +58,25 @@ const Home = ({ navigation }) => {
                renderItem={({ item }) => (
                   <CategoryCard
                      item={item}
-                     handleClickDelete={handleClickDelete}
+                     handleClickDelete={() => {
+                        setSelectedId(item.id);
+                        setIsModalVisible(true);
+                     }}
                   />
                )}
                keyExtractor={(item) => item?.id}
                contentContainerStyle={{ paddingHorizontal: 15 }}
             />
          </Layout>
+         <ModalCard
+            isModalVisible={isModalVisible}
+            handleModalVisible={handleModalVisible}
+            width={300}
+            title='Confirm'
+            onOk={handleOnOk}
+         >
+            <Text>Are you want delete?</Text>
+         </ModalCard>
       </>
    );
 };

@@ -3,7 +3,7 @@ import moment from 'moment';
 import React from 'react';
 import { Image, View, TouchableOpacity } from 'react-native';
 import priceFormat from '../../utils/priceFormat';
-import styles from './cardStyle';
+import styles from './CardStyle';
 
 const EvaIcon = (props) => (
    <Icon {...props} fill='#8C8C98' style={styles.icon} />
@@ -43,7 +43,7 @@ const CategoryCard = (props) => {
                >
                   <View style={{ flex: 3 }}>
                      <Text style={styles.homeTitle}>{item.name}</Text>
-                     <Text style={styles.address}>52 Thanh Thuy</Text>
+                     <Text style={styles.address}>{item.address}</Text>
                      <Text style={styles.date}>
                         {moment(item.startDate).format('MM-DD-YYYY')} -{' '}
                         {moment(item.endDate).format('MM-DD-YYYY')}

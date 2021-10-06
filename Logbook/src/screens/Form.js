@@ -1,21 +1,27 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
-import { Formik } from 'formik';
+import { useNavigation } from '@react-navigation/native';
 import {
-   Modal,
-   Input,
    Button,
    Datepicker,
    Icon,
-   Text,
+   Input,
    Layout,
    Select,
    SelectItem,
-   Card,
+   Text,
 } from '@ui-kitten/components';
-import * as yup from 'yup';
 import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
+import { Formik } from 'formik';
+import moment from 'moment';
+import React, { useState } from 'react';
+import {
+   ScrollView,
+   StyleSheet,
+   View,
+   FlatList,
+   ToastAndroid,
+} from 'react-native';
+import * as yup from 'yup';
+import ModalCard from '../components/ModalCard';
 
 const AlertIcon = (props) => (
    <Icon {...props} fill='#FF4E45' name='alert-circle-outline' />
@@ -33,8 +39,9 @@ const RenderCaption = ({ message }) => {
 };
 
 const Form = () => {
-   const [isModalVisible, setIsModalVisible] = useState(false);
    const navigation = useNavigation();
+   const [isModalVisible, setIsModalVisible] = useState(false);
+   const [formData, setFormData] = useState({});
    const now = new Date();
    const tomorrow = new Date(
       now.getFullYear(),
@@ -72,7 +79,10 @@ const Form = () => {
       propertyType: yup.number().required('Property Type is required'),
       furnitureType: yup.number().required('Furniture Type is required'),
       bedRoom: yup.number().required('Bed Room is required'),
-      rentPrice: yup.number().required('Price is required'),
+      rentPrice: yup
+         .number()
+         .moreThan(0, 'Price must be greater than 0')
+         .required('Price is required'),
    });
 
    const handleSubmitForm = async (data) => {
@@ -83,16 +93,33 @@ const Form = () => {
             bedRoom: bedRoom[data.bedRoom],
             furnitureType: furnitureType[data.furnitureType],
          };
-         const response = await axios.post(
-            'http://192.168.0.113:8000/rental/create',
-            formData,
-         );
-         if (response.data.message === 'Success')
-            return navigation.navigate('Home');
-         if (response.data.message === 'Exist') return setIsModalVisible(true);
+         setFormData(formData);
+         setIsModalVisible(true);
       } catch (error) {
          console.log(error);
       }
+   };
+
+   const handleOnOk = async () => {
+      const response = await axios.post(
+         'http://192.168.0.113:8000/rental/create',
+         formData,
+      );
+      ToastAndroid.showWithGravityAndOffset(
+         response.data.message,
+         ToastAndroid.LONG,
+         ToastAndroid.BOTTOM,
+         10,
+         150,
+      );
+      if (response.data.message === 'Success') {
+         setIsModalVisible(false);
+         return navigation.navigate('Home');
+      }
+   };
+
+   const handleModalVisible = () => {
+      setIsModalVisible(false);
    };
 
    return (
@@ -325,18 +352,44 @@ const Form = () => {
                </Formik>
             </Layout>
          </ScrollView>
-         <Modal
-            visible={isModalVisible}
-            backdropStyle={styles.backdrop}
-            onBackdropPress={() => setIsModalVisible(false)}
+         <ModalCard
+            isModalVisible={isModalVisible}
+            handleModalVisible={handleModalVisible}
+            width={300}
+            title='Confirm'
+            onOk={handleOnOk}
          >
-            <Card disabled={true}>
-               <Text category='h6' style={{ marginBottom: 20 }}>
-                  Address is Exist 💂‍♂️
-               </Text>
-               <Button onPress={() => setIsModalVisible(false)}>OK</Button>
-            </Card>
-         </Modal>
+            <FlatList
+               data={Object.entries(formData)}
+               keyExtractor={(item) => item[0]}
+               renderItem={({ item }) => {
+                  if (item[1].toString() === '') return;
+                  const nameFunc = () => {
+                     if (item[0] === 'name') return 'Name';
+                     if (item[0] === 'address') return 'Address';
+                     if (item[0] === 'startDate') return 'Start Date';
+                     if (item[0] === 'endDate') return 'End Date';
+                     if (item[0] === 'propertyType') return 'Property Type';
+                     if (item[0] === 'furnitureType') return 'Furniture Type';
+                     if (item[0] === 'bedRoom') return 'Bed Room';
+                     if (item[0] === 'rentPrice') return 'Rent Price';
+                     if (item[0] === 'note') return 'Note';
+                  };
+                  return (
+                     <View style={{ flexDirection: 'row' }}>
+                        <Text style={{ fontWeight: 'bold' }}>
+                           {nameFunc()}:{' '}
+                        </Text>
+                        <Text>
+                           {typeof item[1] === 'string'
+                              ? item[1]
+                              : moment(item[1]).format('YYYY-MM-DD')}
+                        </Text>
+                     </View>
+                  );
+               }}
+            />
+         </ModalCard>
       </>
    );
 };

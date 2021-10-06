@@ -7,7 +7,7 @@ class RentalController {
             where: { address: req.body.address },
          });
 
-         if (isExist) return res.json({ message: 'Exist' });
+         if (isExist) return res.json({ message: 'Address is exist' });
 
          const response = await prisma.rental.create({
             data: {
@@ -22,7 +22,7 @@ class RentalController {
                note: req.body.note,
             },
          });
-         return res.json({ ...response, message: 'Success' });
+         return res.json({ ...response, message: 'Created success' });
       } catch (error) {
          return next(error);
       }
